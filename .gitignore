@@ -1,0 +1,20 @@
+node_modules
+.next
+out
+dist
+*.log
+.env*
+!.env.example
+.DS_Store
+Thumbs.db
+*.tsbuildinfo
+
+# Local tooling and scratch files
+.playwright-mcp/
+.codex-dev.err
+.codex-dev.log
+temp-tiktok-page.html
+.claude/settings.local.json
+
+# Local TikTok export samples
+example-data/

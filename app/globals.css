@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(37, 244, 238, 0.17), transparent 30%),
+    radial-gradient(circle at top right, rgba(254, 44, 85, 0.18), transparent 34%),
+    linear-gradient(180deg, #fbf4ea 0%, #f2e5d4 100%);
+  color: #17171c;
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+}
+
+body::before {
+  content: '';
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.28;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(circle at center, black 55%, transparent 100%);
+}
+
+a {
+  color: inherit;
+}
+
+code {
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+::selection {
+  background: rgba(254, 44, 85, 0.18);
+}
+
+.panel-surface {
+  border: 1px solid rgba(17, 18, 24, 0.1);
+  background:
+    linear-gradient(180deg, rgba(17, 18, 24, 0.94), rgba(12, 13, 18, 0.98)),
+    rgba(17, 18, 24, 0.96);
+  box-shadow:
+    0 32px 80px rgba(17, 18, 24, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.shimmer {
+  background:
+    linear-gradient(
+      110deg,
+      rgba(255, 255, 255, 0.02) 20%,
+      rgba(255, 255, 255, 0.09) 42%,
+      rgba(255, 255, 255, 0.02) 64%
+    ),
+    #14151d;
+  background-size: 220% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -20% 0;
+  }
+}
