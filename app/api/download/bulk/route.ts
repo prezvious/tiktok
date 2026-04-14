@@ -16,10 +16,14 @@ import { extractVideoId } from '@/lib/tiktok';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 300;
 
 const BULK_MAX_REQUESTS = 3;
 const BULK_WINDOW_MS = 15 * 60 * 1000;
 const WATCH_CAP = 100;
+const BULK_PROGRESS_INTERVAL = 25;
+const BULK_PAUSE_EVERY = 25;
+const BULK_PAUSE_MS = 250;
 
 type ManifestRecord = {
   dataset: Dataset;
@@ -174,11 +178,18 @@ function createZipStream(entries: VideoEntry[], watchCapped: number, onFinally: 
   const output = new PassThrough();
 
   archive.on('error', (error) => {
+    console.error('[bulk-download] archive error', {
+      message: error.message,
+    });
     output.destroy(error);
   });
 
   archive.on('warning', (error) => {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      console.warn('[bulk-download] archive warning', {
+        code: (error as NodeJS.ErrnoException).code,
+        message: error.message,
+      });
       output.destroy(error);
     }
   });
@@ -201,6 +212,8 @@ async function populateArchive(
   watchCapped: number,
 ) {
   const root = `tiktok-bulk-${timestampSlug()}`;
+  let downloaded = 0;
+  let failed = 0;
   const manifest: Manifest = {
     createdAt: new Date().toISOString(),
     requested: entries.length + watchCapped,
@@ -208,6 +221,12 @@ async function populateArchive(
     watchCapped,
     items: [],
   };
+
+  console.log('[bulk-download] start', {
+    requested: manifest.requested,
+    included: manifest.included,
+    watchCapped,
+  });
 
   for (let index = 0; index < entries.length; index += 1) {
     const entry = entries[index];
@@ -264,20 +283,42 @@ async function populateArchive(
       }
 
       record.status = 'downloaded';
+      downloaded += 1;
     } catch (error) {
       record.status = 'failed';
+      failed += 1;
       record.error =
         error instanceof DownloadResolverError
           ? error.message
           : error instanceof Error
             ? error.message
             : 'Unknown bulk item failure';
+
+      console.warn('[bulk-download] item failed', {
+        index: index + 1,
+        total: entries.length,
+        dataset: entry.dataset,
+        videoId: entry.videoId,
+        error: record.error,
+      });
     }
 
     manifest.items.push(record);
 
-    if (index < entries.length - 1) {
-      await sleep(1200);
+    if ((index + 1) % BULK_PROGRESS_INTERVAL === 0 || index === entries.length - 1) {
+      console.log('[bulk-download] progress', {
+        completed: index + 1,
+        total: entries.length,
+        downloaded,
+        failed,
+      });
+    }
+
+    if (
+      index < entries.length - 1 &&
+      (index + 1) % BULK_PAUSE_EVERY === 0
+    ) {
+      await sleep(BULK_PAUSE_MS);
     }
   }
 
@@ -286,6 +327,14 @@ async function populateArchive(
   });
 
   await archive.finalize();
+
+  console.log('[bulk-download] complete', {
+    requested: manifest.requested,
+    included: manifest.included,
+    downloaded,
+    failed,
+    watchCapped,
+  });
 }
 
 async function appendRemoteFile(
